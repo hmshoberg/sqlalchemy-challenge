@@ -36,4 +36,6 @@ Design a query that calculates the lowest, highest, and average temperatures tha
 Now that you’ve completed your initial analysis, you’ll design a Flask API based on the queries that you just developed. To do so, use Flask to create your routes as follows:
 
 # Sources
-To find date one year from last date : chatgpt
+To find date one year from last date : 
+chatgpt
+https://github.com/ermiasgelaye/sqlalchemy-challenge/blob/master/climate.ipynb
