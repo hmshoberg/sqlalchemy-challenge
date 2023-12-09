@@ -37,5 +37,5 @@ Now that you’ve completed your initial analysis, you’ll design a Flask API b
 
 # Sources
 To find date one year from last date : 
-chatgpt
+chatgpt, 
 https://github.com/ermiasgelaye/sqlalchemy-challenge/blob/master/climate.ipynb
