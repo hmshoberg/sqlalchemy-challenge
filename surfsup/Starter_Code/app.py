@@ -15,7 +15,7 @@ from flask import Flask, jsonify
 #################################################
 # Database Setup
 #################################################
-engine = create_engine("sqlite:///./Resources/hawaii.sqlite")
+engine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
@@ -40,11 +40,11 @@ def home():
     print("Climate App")
     return (
     f"Available Routes:<br/>"
-    f"/api/v1.0/precipitation:<br/>"
-    f"/api/v1.0/stations:<br/>"
-    f"/api/v1.0/tobs:<br/>"
-    f"/api/v1.0/<start>:<br/>"
-    f"/api/v1.0/<start>/<end>:<br/>"
+    f"/api/v1.0/precipitation<br/>"
+    f"/api/v1.0/stations<br/>"
+    f"/api/v1.0/tobs<br/>"
+    f"/api/v1.0/<start><br/>"
+    f"/api/v1.0/<start>/<end><br/>"
     )
 
 #################################################
@@ -72,9 +72,7 @@ def precipitation():
 def stations(): 
     session = Session(engine)
     
-    stations_query = session.query(station.id, station.name).all()
-
-    session.close()
+    stations_query = session.query(Station.id, Station.name).all()
 
 #Convert list to a dictionary
     station_list = []
@@ -84,6 +82,8 @@ def stations():
         station_dict["name"] = station[1]
         station_list.append(station_dict)
 
+    session.close()
+
     return jsonify(station_list)
 
 #Create tobs Route
@@ -92,29 +92,33 @@ def tobs():
     session = Session(engine)
      
 #Query for most active station
-    most_active_station = session.query(Measurement.station, func.count(Measurement.station).label\
+    try:
+        most_active_station = session.query(Measurement.station, func.count(Measurement.station).label\
                     ('station_count')).group_by(Measurement.station).order_by(desc('station_count')).\
                     first()[0]
+    
+        if most_active_station:
+            most_active_station = most_active_station[0]
 
 #Query for temperature statistics for the most active station
-    temperature_stats = session.query(func.min(Measurement.tobs).label('lowest_temperature'),
+            temperature_stats = session.query(func.min(Measurement.tobs).label('lowest_temperature'),
                                       func.max(Measurement.tobs).label('highest_temperature'),
                                       func.avg(Measurement.tobs).label('average_temperature'))\
                     .filter(Measurement.station == most_active_station).first()
 
 #Query for Previous 12 months
 
-    recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
-    last_date = session.query(func.max(Measurement.date)).scalar()
-    most_recent_date = datetime.datetime.strptime(last_date, '%Y-%m-%d') - datetime.timedelta(days=365)
+            recent_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()
+            last_date = session.query(func.max(Measurement.date)).scalar()
+            most_recent_date = datetime.datetime.strptime(last_date, '%Y-%m-%d') - datetime.timedelta(days=365)
 
-    results = session.query(Measurement.tobs).filter(Measurement.date.between\
+            results = session.query(Measurement.tobs).filter(Measurement.date.between\
                     (most_recent_date,last_date),Measurement.station == 'USC00519281').all()
 
-    session.close()
+            session.close()
 
 #Prepare the result as a dictionary
-    result = {
+            result = {
         'temperature_statistics': {
             'lowest_temperature': temperature_stats.lowest_temperature,
             'highest_temperature': temperature_stats.highest_temperature,
@@ -122,7 +126,12 @@ def tobs():
         },
         'temperature_results': results
     }
-    return jsonify(result)
+            return jsonify(result)
+        else:
+            return jsonify({'error': 'No data available to calculate most active station'}), 404
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 #Create start date and end date
 
